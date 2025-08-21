@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Wishlist - Movies to Watch</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Wishlist</h1>
+        <div class="search-section">
+            <div class="search-type-tabs">
+                <button class="search-tab active" data-type="movies">🎬 Movies</button>
+                <button class="search-tab" data-type="tv">📺 TV Shows</button>
+            </div>
+            <div class="search-controls">
+                <input type="text" id="movieSearch" placeholder="Search movies and TV shows..." />
+                <button id="searchBtn">Search</button>
+            </div>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+        
+        <div class="content-tabs">
+            <button class="content-tab active" data-tab="movies">🎬 Movies</button>
+            <button class="content-tab" data-tab="tv">📺 TV Shows</button>
+            <button class="export-btn" onclick="movieLibrary.exportToCSV()">
+                📁 Export to CSV
+            </button>
+        </div>
+
+        <div class="section" id="movies-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="section-icon">💫</span>
+                    Movies to Watch
+                </h2>
+                <div class="filter-controls">
+                    <label for="movieSortSelect" class="filter-label">Sort by:</label>
+                    <select id="movieSortSelect" class="filter-select">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="year">Year (Oldest First)</option>
+                        <option value="year-desc">Year (Newest First)</option>
+                        <option value="genre">Genre (A-Z)</option>
+                        <option value="genre-desc">Genre (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="movieWishlist" class="movie-list"></div>
+        </div>
+
+        <div class="section hidden" id="tv-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="section-icon">📺</span>
+                    TV Shows to Watch
+                </h2>
+                <div class="filter-controls">
+                    <label for="tvSortSelect" class="filter-label">Sort by:</label>
+                    <select id="tvSortSelect" class="filter-select">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="year">Year (Oldest First)</option>
+                        <option value="year-desc">Year (Newest First)</option>
+                        <option value="genre">Genre (A-Z)</option>
+                        <option value="genre-desc">Genre (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="tvWishlist" class="movie-list"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
