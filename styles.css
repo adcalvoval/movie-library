@@ -220,12 +220,23 @@ h1 {
     line-height: 1;
     text-transform: capitalize;
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .genre-badge:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.genre-badge.active {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    box-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
+    transform: scale(1.05);
+}
+
+.genre-badge.active:hover {
+    box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
 }
 
 .genre-badge.no-genre {
@@ -672,4 +683,70 @@ h1 {
 
 .import-btn:active {
     transform: translateY(0);
+}
+
+.genre-filter-info {
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(72, 187, 120, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-active {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.filter-active span {
+    color: #2d3748;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.filter-active strong {
+    color: #48bb78;
+    background: rgba(72, 187, 120, 0.1);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.clear-filter-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2);
+}
+
+.clear-filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
+
+.clear-filter-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .filter-active {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .clear-filter-btn {
+        align-self: center;
+        min-width: 120px;
+    }
 }

@@ -9,6 +9,7 @@ class MovieLibrary {
         this.searchResults = [];
         this.currentSort = 'title';
         this.activeTab = 'movies'; // 'movies' or 'tv'
+        this.activeGenreFilter = null; // For filtering by genre
         this.init();
     }
 
@@ -789,11 +790,42 @@ class MovieLibrary {
             return;
         }
 
-        const sortedItems = this.sortWishlist(wishlist, this.currentSort);
+        // Filter by genre if active
+        let filteredItems = wishlist;
+        if (this.activeGenreFilter) {
+            filteredItems = wishlist.filter(item => 
+                Array.isArray(item.genres) && item.genres.some(genre => 
+                    genre.toLowerCase() === this.activeGenreFilter.toLowerCase()
+                )
+            );
+        }
+
+        // Show filter status and clear option
+        if (this.activeGenreFilter) {
+            const filterInfo = document.createElement('div');
+            filterInfo.className = 'genre-filter-info';
+            filterInfo.innerHTML = `
+                <div class="filter-active">
+                    <span>Filtering by: <strong>${this.activeGenreFilter}</strong> (${filteredItems.length} items)</span>
+                    <button class="clear-filter-btn" onclick="movieLibrary.clearGenreFilter()">✕ Clear Filter</button>
+                </div>
+            `;
+            element.parentNode.insertBefore(filterInfo, element);
+        }
+
+        if (filteredItems.length === 0 && this.activeGenreFilter) {
+            element.innerHTML = `<p class="empty-message">No items found with genre "${this.activeGenreFilter}". <button class="clear-filter-btn" onclick="movieLibrary.clearGenreFilter()">Clear filter</button> to see all items.</p>`;
+            return;
+        }
+
+        const sortedItems = this.sortWishlist(filteredItems, this.currentSort);
 
         element.innerHTML = sortedItems.map(item => {
             const genreBadges = Array.isArray(item.genres) && item.genres.length > 0 
-                ? item.genres.map(genre => `<span class="genre-badge">${genre}</span>`).join('')
+                ? item.genres.map(genre => {
+                    const isActive = this.activeGenreFilter && genre.toLowerCase() === this.activeGenreFilter.toLowerCase();
+                    return `<span class="genre-badge ${isActive ? 'active' : ''}" onclick="movieLibrary.filterByGenre('${genre}')" title="Click to filter by ${genre}">${genre}</span>`;
+                }).join('')
                 : '<span class="genre-badge no-genre">Unknown Genre</span>';
             
             const removeFunction = type === 'movie' ? 'removeFromMovieWishlist' : 'removeFromTvWishlist';
@@ -832,6 +864,34 @@ class MovieLibrary {
         this.tvWishlist = this.tvWishlist.filter(show => show.id !== tvId);
         this.saveTvWishlist();
         this.renderTvWishlist();
+    }
+
+    filterByGenre(genre) {
+        // Clear any existing filter info elements
+        this.clearFilterInfoElements();
+        
+        if (this.activeGenreFilter === genre) {
+            // If clicking the same genre, clear the filter
+            this.clearGenreFilter();
+        } else {
+            // Set new genre filter
+            this.activeGenreFilter = genre;
+            this.renderMovieWishlist();
+            this.renderTvWishlist();
+        }
+    }
+
+    clearGenreFilter() {
+        this.activeGenreFilter = null;
+        this.clearFilterInfoElements();
+        this.renderMovieWishlist();
+        this.renderTvWishlist();
+    }
+
+    clearFilterInfoElements() {
+        // Remove any existing filter info elements
+        const filterInfos = document.querySelectorAll('.genre-filter-info');
+        filterInfos.forEach(info => info.remove());
     }
 
     exportToCSV() {
