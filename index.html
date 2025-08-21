@@ -28,6 +28,10 @@
             <button class="export-btn" onclick="movieLibrary.exportToCSV()">
                 📁 Export to CSV
             </button>
+            <button class="import-btn" onclick="document.getElementById('csvFileInput').click()">
+                📤 Import CSV
+            </button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="movieLibrary.importFromCSV(event)">
         </div>
 
         <div class="section" id="movies-section">

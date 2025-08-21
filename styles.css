@@ -649,3 +649,27 @@ h1 {
 .export-btn:active {
     transform: translateY(0);
 }
+
+
+.import-btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+    margin-left: 12px;
+}
+
+.import-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(66, 153, 225, 0.4);
+}
+
+.import-btn:active {
+    transform: translateY(0);
+}

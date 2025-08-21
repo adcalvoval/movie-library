@@ -904,6 +904,265 @@ class MovieLibrary {
         }
     }
 
+    async importFromCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+            this.showError('Please select a valid CSV file.');
+            return;
+        }
+
+        this.showLoading();
+        const searchResults = document.getElementById('searchResults');
+        searchResults.innerHTML = '<div class="loading">📤 Importing CSV data...</div>';
+
+        try {
+            const text = await this.readFileAsText(file);
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            if (lines.length < 2) {
+                this.showError('CSV file appears to be empty or invalid.');
+                return;
+            }
+
+            // Parse header and validate format
+            const headers = this.parseCSVLine(lines[0]);
+            const expectedHeaders = ['Type', 'Title', 'Director/Creator', 'Year', 'Genres'];
+            
+            if (headers.length < 4 || !headers.includes('Title') || !headers.includes('Type')) {
+                this.showError('Invalid CSV format. Expected headers: Type, Title, Director/Creator, Year, Genres');
+                return;
+            }
+
+            // Parse data rows
+            const dataRows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const row = this.parseCSVLine(lines[i]);
+                if (row.length >= 4) {
+                    const item = {
+                        type: row[0]?.trim(),
+                        title: row[1]?.trim(),
+                        director: row[2]?.trim(),
+                        year: row[3]?.trim(),
+                        genres: row[4]?.trim() || 'Unknown'
+                    };
+                    
+                    if (item.title && item.type) {
+                        dataRows.push(item);
+                    }
+                }
+            }
+
+            if (dataRows.length === 0) {
+                this.showError('No valid data found in CSV file.');
+                return;
+            }
+
+            // Process imported items
+            await this.processImportedItems(dataRows);
+
+        } catch (error) {
+            console.error('Import error:', error);
+            this.showError('Error reading CSV file. Please check the file format.');
+        }
+
+        // Reset file input
+        event.target.value = '';
+    }
+
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        let i = 0;
+
+        while (i < line.length) {
+            const char = line[i];
+            
+            if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    // Escaped quote
+                    current += '"';
+                    i += 2;
+                } else {
+                    // Toggle quote state
+                    inQuotes = !inQuotes;
+                    i++;
+                }
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+                i++;
+            } else {
+                current += char;
+                i++;
+            }
+        }
+        
+        result.push(current);
+        return result;
+    }
+
+    async processImportedItems(dataRows) {
+        const results = { added: 0, duplicates: 0, errors: 0 };
+        
+        const searchResults = document.getElementById('searchResults');
+        searchResults.innerHTML = `<div class="loading">🔍 Looking up ${dataRows.length} items...</div>`;
+
+        for (let i = 0; i < dataRows.length; i++) {
+            const item = dataRows[i];
+            
+            try {
+                let found = false;
+                
+                if (item.type === 'Movie') {
+                    found = await this.searchMovieForImport(item);
+                } else if (item.type === 'TV Show') {
+                    found = await this.searchTvShowForImport(item);
+                }
+                
+                if (found) {
+                    results.added++;
+                } else {
+                    results.errors++;
+                }
+                
+                // Update progress
+                if ((i + 1) % 5 === 0 || i === dataRows.length - 1) {
+                    searchResults.innerHTML = `<div class="loading">🔍 Processed ${i + 1}/${dataRows.length} items...</div>`;
+                }
+                
+            } catch (error) {
+                console.error(`Error processing item: ${item.title}`, error);
+                results.errors++;
+            }
+        }
+
+        this.displayImportResults(results);
+        this.renderMovieWishlist();
+        this.renderTvWishlist();
+    }
+
+    async searchMovieForImport(item) {
+        try {
+            const response = await fetch(`${this.baseUrl}/search/movie?query=${encodeURIComponent(item.title)}&api_key=${this.apiKey}&language=en-US&page=1`);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                // Find best match (preferably by year if provided)
+                let bestMatch = data.results[0];
+                
+                if (item.year && item.year !== 'Unknown') {
+                    const yearMatch = data.results.find(movie => {
+                        const movieYear = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : '';
+                        return movieYear === item.year;
+                    });
+                    if (yearMatch) bestMatch = yearMatch;
+                }
+
+                // Check for duplicates
+                const exists = this.movieWishlist.some(movie => movie.id === bestMatch.id);
+                if (exists) return false;
+
+                // Get detailed movie info
+                const detailsResponse = await fetch(`${this.baseUrl}/movie/${bestMatch.id}?api_key=${this.apiKey}&append_to_response=credits`);
+                const details = await detailsResponse.json();
+
+                const movie = {
+                    id: details.id,
+                    title: details.title,
+                    poster: details.poster_path ? `${this.imageBaseUrl}${details.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image',
+                    year: details.release_date ? new Date(details.release_date).getFullYear() : 'Unknown',
+                    genres: details.genres ? details.genres.map(g => g.name) : [],
+                    director: details.credits?.crew?.find(person => person.job === 'Director')?.name || 'Unknown',
+                    actors: details.credits?.cast?.slice(0, 5).map(actor => actor.name).join(', ') || 'Unknown'
+                };
+
+                this.movieWishlist.push(movie);
+                this.saveMovieWishlist();
+                return true;
+            }
+        } catch (error) {
+            console.error('Movie search error:', error);
+        }
+        return false;
+    }
+
+    async searchTvShowForImport(item) {
+        try {
+            const response = await fetch(`${this.baseUrl}/search/tv?query=${encodeURIComponent(item.title)}&api_key=${this.apiKey}&language=en-US&page=1`);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                // Find best match
+                let bestMatch = data.results[0];
+                
+                if (item.year && item.year !== 'Unknown') {
+                    const yearMatch = data.results.find(show => {
+                        const showYear = show.first_air_date ? new Date(show.first_air_date).getFullYear().toString() : '';
+                        return showYear === item.year;
+                    });
+                    if (yearMatch) bestMatch = yearMatch;
+                }
+
+                // Check for duplicates
+                const exists = this.tvWishlist.some(show => show.id === bestMatch.id);
+                if (exists) return false;
+
+                // Get detailed TV show info
+                const detailsResponse = await fetch(`${this.baseUrl}/tv/${bestMatch.id}?api_key=${this.apiKey}&append_to_response=credits`);
+                const details = await detailsResponse.json();
+
+                const tvShow = {
+                    id: details.id,
+                    title: details.name,
+                    poster: details.poster_path ? `${this.imageBaseUrl}${details.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image',
+                    first_air_year: details.first_air_date ? new Date(details.first_air_date).getFullYear() : 'Unknown',
+                    genres: details.genres ? details.genres.map(g => g.name) : [],
+                    creator: details.created_by?.length > 0 ? details.created_by.map(c => c.name).join(', ') : 'Unknown',
+                    seasons: details.number_of_seasons || 'Unknown'
+                };
+
+                this.tvWishlist.push(tvShow);
+                this.saveTvWishlist();
+                return true;
+            }
+        } catch (error) {
+            console.error('TV show search error:', error);
+        }
+        return false;
+    }
+
+    displayImportResults(results) {
+        const searchResults = document.getElementById('searchResults');
+        const total = results.added + results.duplicates + results.errors;
+        
+        let message = `<div class="loading">✅ Import Complete!<br>`;
+        message += `📊 ${results.added} items added to wishlists<br>`;
+        
+        if (results.errors > 0) {
+            message += `❌ ${results.errors} items could not be found<br>`;
+        }
+        
+        message += `📈 Total processed: ${total}</div>`;
+        
+        searchResults.innerHTML = message;
+        
+        setTimeout(() => {
+            this.clearSearchResults();
+        }, 5000);
+    }
+
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
 }
 
 // Initialize the app when page loads
