@@ -62,8 +62,21 @@ class MovieLibrary {
         if (this.currentUser && this.supabaseClient) {
             // Load from Supabase
             try {
-                this.movieWishlist = await this.supabaseClient.getMovieWishlist();
-                this.tvWishlist = await this.supabaseClient.getTvWishlist();
+                const movieData = await this.supabaseClient.getMovieWishlist();
+                const tvData = await this.supabaseClient.getTvWishlist();
+                
+                // Map database field names to expected field names
+                this.movieWishlist = movieData.map(movie => ({
+                    ...movie,
+                    poster: movie.poster_url,
+                    id: movie.tmdb_id
+                }));
+                
+                this.tvWishlist = tvData.map(show => ({
+                    ...show,
+                    poster: show.poster_url,
+                    id: show.tmdb_id
+                }));
             } catch (error) {
                 console.error('Error loading from Supabase:', error);
                 // Fallback to localStorage
