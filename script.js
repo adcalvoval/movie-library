@@ -952,11 +952,13 @@ class MovieLibrary {
     renderMovieWishlist() {
         const wishlistElement = document.getElementById('movieWishlist');
         this.renderWishlist(wishlistElement, this.movieWishlist, 'movie');
+        this.updateMovieCount();
     }
 
     renderTvWishlist() {
         const wishlistElement = document.getElementById('tvWishlist');
         this.renderWishlist(wishlistElement, this.tvWishlist, 'tv');
+        this.updateTvCount();
     }
 
     renderWishlist(element, wishlist, type) {
@@ -1423,6 +1425,20 @@ class MovieLibrary {
             reader.onerror = (e) => reject(e);
             reader.readAsText(file);
         });
+    }
+
+    updateMovieCount() {
+        const movieCountElement = document.getElementById('movie-count');
+        if (movieCountElement) {
+            movieCountElement.textContent = `(${this.movieWishlist.length})`;
+        }
+    }
+
+    updateTvCount() {
+        const tvCountElement = document.getElementById('tv-count');
+        if (tvCountElement) {
+            tvCountElement.textContent = `(${this.tvWishlist.length})`;
+        }
     }
 
 }
