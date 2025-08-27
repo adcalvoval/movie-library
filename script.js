@@ -14,7 +14,8 @@ class MovieLibrary {
         this.movieWishlist = [];
         this.tvWishlist = [];
         this.searchResults = [];
-        this.currentSort = 'title';
+        this.movieSort = 'title';
+        this.tvSort = 'title';
         this.activeTab = 'movies';
         this.activeGenreFilter = null;
         
@@ -94,18 +95,30 @@ class MovieLibrary {
         
         // Add dateAdded field to existing items that don't have it
         const defaultDate = new Date('2024-01-01').toISOString(); // Default date for existing items
+        let movieChanged = false;
+        let tvChanged = false;
         
         this.movieWishlist.forEach(movie => {
             if (!movie.dateAdded) {
                 movie.dateAdded = defaultDate;
+                movieChanged = true;
             }
         });
         
         this.tvWishlist.forEach(show => {
             if (!show.dateAdded) {
                 show.dateAdded = defaultDate;
+                tvChanged = true;
             }
         });
+        
+        // Save back to localStorage if we added dateAdded fields
+        if (movieChanged) {
+            this.saveMovieWishlist();
+        }
+        if (tvChanged) {
+            this.saveTvWishlist();
+        }
     }
 
     updateAuthUI() {
@@ -198,13 +211,17 @@ class MovieLibrary {
             }
         });
         
+        // Set initial sort values
+        if (movieSortSelect) movieSortSelect.value = this.movieSort;
+        if (tvSortSelect) tvSortSelect.value = this.tvSort;
+        
         movieSortSelect.addEventListener('change', (e) => {
-            this.currentSort = e.target.value;
+            this.movieSort = e.target.value;
             this.renderMovieWishlist();
         });
         
         tvSortSelect.addEventListener('change', (e) => {
-            this.currentSort = e.target.value;
+            this.tvSort = e.target.value;
             this.renderTvWishlist();
         });
     }
@@ -1029,7 +1046,8 @@ class MovieLibrary {
             return;
         }
 
-        const sortedItems = this.sortWishlist(filteredItems, this.currentSort);
+        const sortType = type === 'movie' ? this.movieSort : this.tvSort;
+        const sortedItems = this.sortWishlist(filteredItems, sortType);
 
         element.innerHTML = sortedItems.map(item => {
             const genreBadges = Array.isArray(item.genres) && item.genres.length > 0 
