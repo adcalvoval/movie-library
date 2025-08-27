@@ -91,6 +91,21 @@ class MovieLibrary {
     loadFromLocalStorage() {
         this.movieWishlist = this.loadMovieWishlist();
         this.tvWishlist = this.loadTvWishlist();
+        
+        // Add dateAdded field to existing items that don't have it
+        const defaultDate = new Date('2024-01-01').toISOString(); // Default date for existing items
+        
+        this.movieWishlist.forEach(movie => {
+            if (!movie.dateAdded) {
+                movie.dateAdded = defaultDate;
+            }
+        });
+        
+        this.tvWishlist.forEach(show => {
+            if (!show.dateAdded) {
+                show.dateAdded = defaultDate;
+            }
+        });
     }
 
     updateAuthUI() {
@@ -515,6 +530,8 @@ class MovieLibrary {
             return;
         }
         
+        // Add dateAdded field
+        movieData.dateAdded = new Date().toISOString();
         this.movieWishlist.push(movieData);
         
         // Save to Supabase if authenticated, otherwise localStorage
@@ -548,6 +565,8 @@ class MovieLibrary {
             return;
         }
         
+        // Add dateAdded field
+        tvData.dateAdded = new Date().toISOString();
         this.tvWishlist.push(tvData);
         
         // Save to Supabase if authenticated, otherwise localStorage
@@ -578,6 +597,8 @@ class MovieLibrary {
                 return;
             }
             
+            // Add dateAdded field
+            movieData.dateAdded = new Date().toISOString();
             this.movieWishlist.push(movieData);
             this.saveMovieWishlist();
             this.renderMovieWishlist();
@@ -899,6 +920,18 @@ class MovieLibrary {
                     const aGenre = Array.isArray(a.genres) && a.genres.length > 0 ? a.genres[0] : '';
                     const bGenre = Array.isArray(b.genres) && b.genres.length > 0 ? b.genres[0] : '';
                     return bGenre.localeCompare(aGenre);
+                });
+            case 'date-added':
+                return sortedMovies.sort((a, b) => {
+                    const aDate = new Date(a.dateAdded || '2024-01-01');
+                    const bDate = new Date(b.dateAdded || '2024-01-01');
+                    return aDate - bDate;
+                });
+            case 'date-added-desc':
+                return sortedMovies.sort((a, b) => {
+                    const aDate = new Date(a.dateAdded || '2024-01-01');
+                    const bDate = new Date(b.dateAdded || '2024-01-01');
+                    return bDate - aDate;
                 });
             default:
                 return sortedMovies;
@@ -1340,7 +1373,8 @@ class MovieLibrary {
                     year: details.release_date ? new Date(details.release_date).getFullYear() : 'Unknown',
                     genres: details.genres ? details.genres.map(g => g.name) : [],
                     director: details.credits?.crew?.find(person => person.job === 'Director')?.name || 'Unknown',
-                    actors: details.credits?.cast?.slice(0, 5).map(actor => actor.name).join(', ') || 'Unknown'
+                    actors: details.credits?.cast?.slice(0, 5).map(actor => actor.name).join(', ') || 'Unknown',
+                    dateAdded: new Date().toISOString()
                 };
 
                 this.movieWishlist.push(movie);
@@ -1385,7 +1419,8 @@ class MovieLibrary {
                     first_air_year: details.first_air_date ? new Date(details.first_air_date).getFullYear() : 'Unknown',
                     genres: details.genres ? details.genres.map(g => g.name) : [],
                     creator: details.created_by?.length > 0 ? details.created_by.map(c => c.name).join(', ') : 'Unknown',
-                    seasons: details.number_of_seasons || 'Unknown'
+                    seasons: details.number_of_seasons || 'Unknown',
+                    dateAdded: new Date().toISOString()
                 };
 
                 this.tvWishlist.push(tvShow);
