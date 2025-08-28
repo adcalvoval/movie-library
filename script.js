@@ -94,26 +94,34 @@ class MovieLibrary {
         this.tvWishlist = this.loadTvWishlist();
         
         // Add dateAdded field to existing items that don't have it
-        const defaultDate = new Date('2024-01-01').toISOString(); // Default date for existing items
         let movieChanged = false;
         let tvChanged = false;
+        let baseDate = new Date('2024-01-01').getTime(); // Base timestamp for existing items
         
         console.log('Loaded movies from localStorage:', this.movieWishlist.length);
         console.log('Loaded TV shows from localStorage:', this.tvWishlist.length);
         
+        // Assign incremental dates to existing movies without dateAdded
+        let movieIndex = 0;
         this.movieWishlist.forEach(movie => {
             if (!movie.dateAdded) {
                 console.log('Adding dateAdded to movie:', movie.title);
-                movie.dateAdded = defaultDate;
+                // Give each existing item a different date (1 day apart) so they sort properly
+                movie.dateAdded = new Date(baseDate + (movieIndex * 24 * 60 * 60 * 1000)).toISOString();
                 movieChanged = true;
+                movieIndex++;
             }
         });
         
+        // Assign incremental dates to existing TV shows without dateAdded
+        let tvIndex = 0;
         this.tvWishlist.forEach(show => {
             if (!show.dateAdded) {
                 console.log('Adding dateAdded to TV show:', show.title);
-                show.dateAdded = defaultDate;
+                // Give each existing item a different date (1 day apart) so they sort properly
+                show.dateAdded = new Date(baseDate + (tvIndex * 24 * 60 * 60 * 1000)).toISOString();
                 tvChanged = true;
+                tvIndex++;
             }
         });
         
@@ -951,13 +959,17 @@ class MovieLibrary {
                 return sortedMovies.sort((a, b) => {
                     const aDate = new Date(a.dateAdded || '2024-01-01');
                     const bDate = new Date(b.dateAdded || '2024-01-01');
-                    return aDate - bDate;
+                    const result = aDate - bDate; // Oldest first (earlier dates first)
+                    console.log(`Comparing dates: ${a.title} (${a.dateAdded}) vs ${b.title} (${b.dateAdded}) = ${result}`);
+                    return result;
                 });
             case 'date-added-desc':
                 return sortedMovies.sort((a, b) => {
                     const aDate = new Date(a.dateAdded || '2024-01-01');
                     const bDate = new Date(b.dateAdded || '2024-01-01');
-                    return bDate - aDate;
+                    const result = bDate - aDate; // Newest first (later dates first)
+                    console.log(`Comparing dates: ${a.title} (${a.dateAdded}) vs ${b.title} (${b.dateAdded}) = ${result}`);
+                    return result;
                 });
             default:
                 return sortedMovies;
