@@ -96,32 +96,23 @@ class MovieLibrary {
         // Add dateAdded field to existing items that don't have it
         let movieChanged = false;
         let tvChanged = false;
-        let baseDate = new Date('2024-01-01').getTime(); // Base timestamp for existing items
         
-        console.log('Loaded movies from localStorage:', this.movieWishlist.length);
-        console.log('Loaded TV shows from localStorage:', this.tvWishlist.length);
+        // Use a base date in the past and assign incremental dates
+        let baseDate = new Date('2023-01-01').getTime();
         
-        // Assign incremental dates to existing movies without dateAdded
-        let movieIndex = 0;
-        this.movieWishlist.forEach(movie => {
+        this.movieWishlist.forEach((movie, index) => {
             if (!movie.dateAdded) {
-                console.log('Adding dateAdded to movie:', movie.title);
-                // Give each existing item a different date (1 day apart) so they sort properly
-                movie.dateAdded = new Date(baseDate + (movieIndex * 24 * 60 * 60 * 1000)).toISOString();
+                // Assign dates starting from base date, incrementing by 1 day each
+                movie.dateAdded = new Date(baseDate + (index * 24 * 60 * 60 * 1000)).toISOString();
                 movieChanged = true;
-                movieIndex++;
             }
         });
         
-        // Assign incremental dates to existing TV shows without dateAdded
-        let tvIndex = 0;
-        this.tvWishlist.forEach(show => {
+        this.tvWishlist.forEach((show, index) => {
             if (!show.dateAdded) {
-                console.log('Adding dateAdded to TV show:', show.title);
-                // Give each existing item a different date (1 day apart) so they sort properly
-                show.dateAdded = new Date(baseDate + (tvIndex * 24 * 60 * 60 * 1000)).toISOString();
+                // Assign dates starting from base date, incrementing by 1 day each  
+                show.dateAdded = new Date(baseDate + (index * 24 * 60 * 60 * 1000)).toISOString();
                 tvChanged = true;
-                tvIndex++;
             }
         });
         
@@ -229,14 +220,12 @@ class MovieLibrary {
         if (tvSortSelect) tvSortSelect.value = this.tvSort;
         
         movieSortSelect.addEventListener('change', (e) => {
-            console.log('Movie sort changed to:', e.target.value);
-            this.movieSort = e.target.value;
+                this.movieSort = e.target.value;
             this.renderMovieWishlist();
         });
         
         tvSortSelect.addEventListener('change', (e) => {
-            console.log('TV sort changed to:', e.target.value);
-            this.tvSort = e.target.value;
+                this.tvSort = e.target.value;
             this.renderTvWishlist();
         });
     }
@@ -930,8 +919,6 @@ class MovieLibrary {
 
 
     sortWishlist(movies, sortBy) {
-        console.log('Sorting', movies.length, 'items by:', sortBy);
-        console.log('First few items dateAdded:', movies.slice(0, 3).map(m => ({title: m.title, dateAdded: m.dateAdded})));
         const sortedMovies = [...movies];
         
         switch(sortBy) {
@@ -957,19 +944,30 @@ class MovieLibrary {
                 });
             case 'date-added':
                 return sortedMovies.sort((a, b) => {
-                    const aDate = new Date(a.dateAdded || '2024-01-01');
-                    const bDate = new Date(b.dateAdded || '2024-01-01');
-                    const result = aDate - bDate; // Oldest first (earlier dates first)
-                    console.log(`Comparing dates: ${a.title} (${a.dateAdded}) vs ${b.title} (${b.dateAdded}) = ${result}`);
-                    return result;
+                    // Get dateAdded or use a fallback based on array index for consistent sorting
+                    const aDate = a.dateAdded ? new Date(a.dateAdded) : new Date('2023-01-01');
+                    const bDate = b.dateAdded ? new Date(b.dateAdded) : new Date('2023-01-01');
+                    
+                    // For debugging - let's see what we're actually comparing
+                    const diff = aDate.getTime() - bDate.getTime();
+                    if (diff === 0) {
+                        // If dates are the same, sort by title as secondary sort
+                        return a.title.localeCompare(b.title);
+                    }
+                    return diff; // Oldest first (smaller timestamp = earlier date)
                 });
             case 'date-added-desc':
                 return sortedMovies.sort((a, b) => {
-                    const aDate = new Date(a.dateAdded || '2024-01-01');
-                    const bDate = new Date(b.dateAdded || '2024-01-01');
-                    const result = bDate - aDate; // Newest first (later dates first)
-                    console.log(`Comparing dates: ${a.title} (${a.dateAdded}) vs ${b.title} (${b.dateAdded}) = ${result}`);
-                    return result;
+                    // Get dateAdded or use a fallback based on array index for consistent sorting
+                    const aDate = a.dateAdded ? new Date(a.dateAdded) : new Date('2023-01-01');
+                    const bDate = b.dateAdded ? new Date(b.dateAdded) : new Date('2023-01-01');
+                    
+                    const diff = bDate.getTime() - aDate.getTime();
+                    if (diff === 0) {
+                        // If dates are the same, sort by title as secondary sort
+                        return a.title.localeCompare(b.title);
+                    }
+                    return diff; // Newest first (larger timestamp = later date)
                 });
             default:
                 return sortedMovies;
@@ -1068,7 +1066,6 @@ class MovieLibrary {
         }
 
         const sortType = type === 'movie' ? this.movieSort : this.tvSort;
-        console.log(`Rendering ${type} wishlist with sort:`, sortType);
         const sortedItems = this.sortWishlist(filteredItems, sortType);
 
         element.innerHTML = sortedItems.map(item => {
