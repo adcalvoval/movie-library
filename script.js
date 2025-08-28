@@ -98,8 +98,12 @@ class MovieLibrary {
         let movieChanged = false;
         let tvChanged = false;
         
+        console.log('Loaded movies from localStorage:', this.movieWishlist.length);
+        console.log('Loaded TV shows from localStorage:', this.tvWishlist.length);
+        
         this.movieWishlist.forEach(movie => {
             if (!movie.dateAdded) {
+                console.log('Adding dateAdded to movie:', movie.title);
                 movie.dateAdded = defaultDate;
                 movieChanged = true;
             }
@@ -107,6 +111,7 @@ class MovieLibrary {
         
         this.tvWishlist.forEach(show => {
             if (!show.dateAdded) {
+                console.log('Adding dateAdded to TV show:', show.title);
                 show.dateAdded = defaultDate;
                 tvChanged = true;
             }
@@ -216,11 +221,13 @@ class MovieLibrary {
         if (tvSortSelect) tvSortSelect.value = this.tvSort;
         
         movieSortSelect.addEventListener('change', (e) => {
+            console.log('Movie sort changed to:', e.target.value);
             this.movieSort = e.target.value;
             this.renderMovieWishlist();
         });
         
         tvSortSelect.addEventListener('change', (e) => {
+            console.log('TV sort changed to:', e.target.value);
             this.tvSort = e.target.value;
             this.renderTvWishlist();
         });
@@ -915,6 +922,8 @@ class MovieLibrary {
 
 
     sortWishlist(movies, sortBy) {
+        console.log('Sorting', movies.length, 'items by:', sortBy);
+        console.log('First few items dateAdded:', movies.slice(0, 3).map(m => ({title: m.title, dateAdded: m.dateAdded})));
         const sortedMovies = [...movies];
         
         switch(sortBy) {
@@ -1047,6 +1056,7 @@ class MovieLibrary {
         }
 
         const sortType = type === 'movie' ? this.movieSort : this.tvSort;
+        console.log(`Rendering ${type} wishlist with sort:`, sortType);
         const sortedItems = this.sortWishlist(filteredItems, sortType);
 
         element.innerHTML = sortedItems.map(item => {
