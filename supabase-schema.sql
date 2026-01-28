@@ -12,7 +12,7 @@ CREATE TABLE public.user_profiles (
 -- Create movie wishlist table
 CREATE TABLE public.movie_wishlist (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   tmdb_id INTEGER NOT NULL,
   title TEXT NOT NULL,
   year INTEGER,
@@ -29,7 +29,7 @@ CREATE TABLE public.movie_wishlist (
 -- Create TV wishlist table
 CREATE TABLE public.tv_wishlist (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   tmdb_id INTEGER NOT NULL,
   title TEXT NOT NULL,
   first_air_year INTEGER,
