@@ -1,7 +1,7 @@
 // Supabase configuration for Movie Library
 // Replace these with your actual Supabase project credentials
-const SUPABASE_URL = 'https://inngpukwayrazupyrefr.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlubmdwdWt3YXlyYXp1cHlyZWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MDQ5NzQsImV4cCI6MjA3MTM4MDk3NH0.3RQwAT-TfbjmCY4rt6fpKurv4V2OWnB9HRGGgKQIHck'
+const SUPABASE_URL = 'https://ovbnijbdagsdmgpsicil.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_R6BBVT4zhExb5Uj28-1RNQ_8hvhSxjw'
 
 // Import Supabase client (add this script tag to your HTML)
 // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
